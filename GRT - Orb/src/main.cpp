@@ -5,10 +5,10 @@
 #include "leds.h"
 #include "e131_mgr.h"
 
-// printing controls
+// print controls
 constexpr bool     PRINT_ON_CHANGE = true;
-constexpr uint8_t  CHANGE_THRESH   = 1;       // ignore tiny changes
-constexpr uint32_t HEARTBEAT_MS    = 5000;    // 5 s stats
+constexpr uint8_t  CHANGE_THRESH   = 1;        // ignore tiny changes
+constexpr uint32_t HEARTBEAT_MS    = 5000;     // 5 s stats
 
 // state
 static uint8_t  lastR = 255, lastG = 255, lastB = 255, lastW = 255, lastDim = 255;
@@ -44,34 +44,31 @@ void loop(){
   bool changed   = false;
 
   while (e131Poll(r,g,b,w,dim,seq)){
-    ledsWriteAll(r,g,b,w,dim);
+    // only write LEDs when something changes
+    auto diff = [](uint8_t a, uint8_t b){ return (a>b)?(a-b):(b-a); };
+    changed = changed ||
+              diff(r,lastR) >= CHANGE_THRESH ||
+              diff(g,lastG) >= CHANGE_THRESH ||
+              diff(b,lastB) >= CHANGE_THRESH ||
+              diff(w,lastW) >= CHANGE_THRESH ||
+              diff(dim,lastDim) >= CHANGE_THRESH;
+
+    if (changed) ledsWriteAll(r,g,b,w,dim);
+
     lastPacketMs = millis();
     anyPacket = true;
     pktCount++;
 
-    // loss check
     if (pktCount > 1){
       uint8_t expect = uint8_t(prevSeq + 1);
       if (seq != expect) lossCount++;
     }
     prevSeq = seq;
 
-    // value change check
-    if (PRINT_ON_CHANGE){
-      auto diff = [](uint8_t a, uint8_t b){ return (a>b)?(a-b):(b-a); };
-      if (diff(r,lastR) >= CHANGE_THRESH ||
-          diff(g,lastG) >= CHANGE_THRESH ||
-          diff(b,lastB) >= CHANGE_THRESH ||
-          diff(w,lastW) >= CHANGE_THRESH ||
-          diff(dim,lastDim) >= CHANGE_THRESH) {
-        changed = true;
-      }
-    }
-
     lastR=r; lastG=g; lastB=b; lastW=w; lastDim=dim;
   }
 
-  // print only on change (rate limited)
+  // print on change, rate limited
   static uint32_t lastChangePrint = 0;
   if (anyPacket && changed && millis() - lastChangePrint > 100){
     lastChangePrint = millis();

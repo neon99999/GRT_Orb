@@ -2,6 +2,8 @@
 #include "config.h"
 
 static bool ledState = false;
+static uint32_t nextReconnectMs = 0;
+static uint32_t backoffMs = 1000;   // start 1 s, max 30 s
 
 void wifiPrintStatus(){
   Serial.println();
@@ -30,14 +32,37 @@ void wifiInit(){
   digitalWrite(STATUS_LED, HIGH);
   Serial.println("\nWiFi connected");
   wifiPrintStatus();
+  backoffMs = 1000;
+  nextReconnectMs = 0;
 }
 
 void wifiEnsure(){
   if (WiFi.status() == WL_CONNECTED) return;
+  uint32_t now = millis();
+  if (now < nextReconnectMs) return;
+
   Serial.println("WiFi lost, reconnecting");
-  wifiInit();
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  uint32_t t0 = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - t0 < 2000){
+    ledState = !ledState;
+    digitalWrite(STATUS_LED, ledState);
+    delay(200);
+  }
+  if (WiFi.status() == WL_CONNECTED){
+    digitalWrite(STATUS_LED, HIGH);
+    Serial.println("WiFi reconnected");
+    wifiPrintStatus();
+    backoffMs = 1000;
+    nextReconnectMs = 0;
+  } else {
+    backoffMs = min(backoffMs * 2, (uint32_t)30000);
+    nextReconnectMs = now + backoffMs;
+    Serial.print("Retry in "); Serial.print(backoffMs); Serial.println(" ms");
+  }
 }
 
-IPAddress wifiIP(){
-  return WiFi.localIP();
-}
+IPAddress wifiIP(){ return WiFi.localIP(); }

@@ -14,15 +14,17 @@ static const uint8_t PROGMEM gamma8Table[256] = {
 static inline uint8_t g8(uint8_t x){ return pgm_read_byte(&gamma8Table[x]); }
 static inline uint32_t pack(uint8_t r,uint8_t g,uint8_t b,uint8_t w){ return strip.Color(r,g,b,w); }
 
+// cache last color to avoid redundant .show()
+static uint32_t lastPacked = 0;
+static bool lastValid = false;
+
 void ledsInit(){
   strip.begin();
   strip.setBrightness(255);
   strip.show();
 }
 
-void ledsSetBrightnessCap(uint8_t cap){
-  s_cap = cap;
-}
+void ledsSetBrightnessCap(uint8_t cap){ s_cap = cap; }
 
 void ledsWriteAll(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint8_t master){
   r = g8(min<uint8_t>(r, s_cap));
@@ -33,7 +35,12 @@ void ledsWriteAll(uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint8_t master){
   g = (uint16_t)g * master / 255;
   b = (uint16_t)b * master / 255;
   w = (uint16_t)w * master / 255;
+
   uint32_t c = pack(r,g,b,w);
+  if (lastValid && c == lastPacked) return;
+  lastPacked = c;
+  lastValid = true;
+
   for (int i = 0; i < NUM_PIXELS; i++) strip.setPixelColor(i, c);
   strip.show();
 }
