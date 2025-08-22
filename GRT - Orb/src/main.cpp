@@ -1,29 +1,54 @@
 #include <Arduino.h>
-#include <Adafruit_NeoPixel.h>
+#include "config.h"
+#include "wifi_mgr.h"
+#include "leds.h"
+#include "e131_mgr.h"
 
-#define LED_PIN    5
-#define NUM_PIXELS 12
+static uint32_t lastPacketMs = 0;
+static uint8_t  lastSeq = 0;
 
-// Try GRBW first. If colors look swapped, change to NEO_RGBW.
-Adafruit_NeoPixel strip(NUM_PIXELS, LED_PIN, NEO_GRBW + NEO_KHZ800);
+void setup(){
+  Serial.begin(115200);
+  delay(200);
+  Serial.println();
+  Serial.println("=== Boot ===");
 
-void showOne(int i, uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint16_t ms) {
-  strip.clear();
-  strip.setPixelColor(i, strip.Color(r, g, b, w));
-  strip.show();
-  delay(ms);
+  ledsInit();
+  ledsSetBrightnessCap(DEFAULT_BRIGHTNESS_CAP);
+
+  wifiInit();
+  ledsShowIPOnce(wifiIP());
+
+  e131Init();
+  ledsWriteAll(0,0,0,0,0);
 }
 
-void setup() {
-  strip.begin();
-  strip.setBrightness(30);   // low brightness
-  strip.show();              // all off
-}
+void loop(){
+  wifiEnsure();
 
-void loop() {
-  // Walk one pixel around the ring testing R, G, B, then W
-  for (int i = 0; i < NUM_PIXELS; i++) showOne(i, 60, 0, 0, 0, 120); // red
-  for (int i = 0; i < NUM_PIXELS; i++) showOne(i, 0, 60, 0, 0, 120); // green
-  for (int i = 0; i < NUM_PIXELS; i++) showOne(i, 0, 0, 60, 0, 120); // blue
-  for (int i = 0; i < NUM_PIXELS; i++) showOne(i, 0, 0, 0, 40, 120); // white channel
+  uint8_t r,g,b,w,dim,seq;
+  bool got = false;
+  while (e131Poll(r,g,b,w,dim,seq)){
+    ledsWriteAll(r,g,b,w,dim);
+    lastSeq = seq;
+    lastPacketMs = millis();
+    got = true;
+  }
+
+  static uint32_t lastPrint = 0;
+  if (got && millis() - lastPrint > 500){
+    lastPrint = millis();
+    Serial.print("U"); Serial.print(E131_UNIVERSE);
+    Serial.print(" seq "); Serial.print(lastSeq);
+    Serial.print(" DMX r,g,b,w,dim = ");
+    Serial.print((int)r); Serial.print(",");
+    Serial.print((int)g); Serial.print(",");
+    Serial.print((int)b); Serial.print(",");
+    Serial.print((int)w); Serial.print(",");
+    Serial.println((int)dim);
+  }
+
+  if (millis() - lastPacketMs > DMX_TIMEOUT_MS){
+    ledsWriteAll(0,0,0,0,0);
+  }
 }

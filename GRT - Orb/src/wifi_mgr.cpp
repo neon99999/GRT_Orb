@@ -1,0 +1,43 @@
+#include "wifi_mgr.h"
+#include "config.h"
+
+static bool ledState = false;
+
+void wifiPrintStatus(){
+  Serial.println();
+  Serial.println("=== WiFi ===");
+  Serial.print("SSID: "); Serial.println(WIFI_SSID);
+  Serial.print("IP:   "); Serial.println(WiFi.localIP());
+  Serial.print("GW:   "); Serial.println(WiFi.gatewayIP());
+  Serial.print("RSSI: "); Serial.print(WiFi.RSSI()); Serial.println(" dBm");
+  Serial.print("MAC:  "); Serial.println(WiFi.macAddress());
+  Serial.println("===========");
+}
+
+void wifiInit(){
+  pinMode(STATUS_LED, OUTPUT);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+  Serial.println();
+  Serial.println("WiFi connecting");
+  while (WiFi.status() != WL_CONNECTED){
+    ledState = !ledState;
+    digitalWrite(STATUS_LED, ledState);
+    Serial.print(".");
+    delay(300);
+  }
+  digitalWrite(STATUS_LED, HIGH);
+  Serial.println("\nWiFi connected");
+  wifiPrintStatus();
+}
+
+void wifiEnsure(){
+  if (WiFi.status() == WL_CONNECTED) return;
+  Serial.println("WiFi lost, reconnecting");
+  wifiInit();
+}
+
+IPAddress wifiIP(){
+  return WiFi.localIP();
+}
