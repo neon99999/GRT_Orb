@@ -8,7 +8,7 @@ extern const char WIFI_PASSWORD[];
 
 // compile-time settings
 constexpr uint16_t E131_UNIVERSE = 1;
-constexpr uint16_t START_ADDR    = 1;   // R,G,B,W,Dim
+constexpr uint16_t START_ADDR    = 321;   // I, R,G,B,W
 constexpr bool     USE_UNICAST   = true;
 
 constexpr int LED_PIN    = 5;

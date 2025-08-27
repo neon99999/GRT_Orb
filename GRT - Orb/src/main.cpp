@@ -72,12 +72,13 @@ void loop(){
   static uint32_t lastChangePrint = 0;
   if (anyPacket && changed && millis() - lastChangePrint > 100){
     lastChangePrint = millis();
-    Serial.print("DMX r,g,b,w,dim = ");
-    Serial.print((int)lastR); Serial.print(",");
-    Serial.print((int)lastG); Serial.print(",");
-    Serial.print((int)lastB); Serial.print(",");
-    Serial.print((int)lastW); Serial.print(",");
-    Serial.println((int)lastDim);
+    Serial.print("DMX i,r,g,b,w = ");
+    Serial.print((int)lastDim); Serial.print(",");
+    Serial.print((int)lastR);   Serial.print(",");
+    Serial.print((int)lastG);   Serial.print(",");
+    Serial.print((int)lastB);   Serial.print(",");
+    Serial.println((int)lastW);
+
   }
 
   // heartbeat

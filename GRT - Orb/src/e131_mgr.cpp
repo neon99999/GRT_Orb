@@ -20,12 +20,13 @@ bool e131Poll(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& w, uint8_t& dim, uint
 
   r = g = b = w = dim = 0;
   if (s + 4 < 512){
-    r   = dmx[s + 0];
-    g   = dmx[s + 1];
-    b   = dmx[s + 2];
-    w   = dmx[s + 3];
-    dim = dmx[s + 4];
+    dim = dmx[s + 0];  // I at N
+    r   = dmx[s + 1];  // R at N+1
+    g   = dmx[s + 2];  // G at N+2
+    b   = dmx[s + 3];  // B at N+3
+    w   = dmx[s + 4];  // W at N+4
   }
+
   seq = p.sequence_number;
   return true;
 }
