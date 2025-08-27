@@ -19,6 +19,12 @@ void wifiPrintStatus(){
 void wifiInit(){
   pinMode(STATUS_LED, OUTPUT);
   WiFi.mode(WIFI_STA);
+  WiFi.persistent(false);         // don't write creds every boot
+  WiFi.setSleep(false);           // lower latency, steadier sACN
+
+  if (USE_STATIC_IP)              // set static before begin()
+    WiFi.config(STATIC_IP, STATIC_GW, STATIC_SN, STATIC_DNS);
+
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.println();
@@ -36,6 +42,7 @@ void wifiInit(){
   nextReconnectMs = 0;
 }
 
+
 void wifiEnsure(){
   if (WiFi.status() == WL_CONNECTED) return;
   uint32_t now = millis();
@@ -44,6 +51,7 @@ void wifiEnsure(){
   Serial.println("WiFi lost, reconnecting");
   WiFi.disconnect(true);
   WiFi.mode(WIFI_STA);
+  if (USE_STATIC_IP) WiFi.config(STATIC_IP, STATIC_GW, STATIC_SN, STATIC_DNS);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   uint32_t t0 = millis();
