@@ -25,20 +25,20 @@ constexpr uint32_t DMX_TIMEOUT_MS = 3000;
 
 // IP tuple
 // Theatre router example
-// constexpr bool USE_STATIC_IP = true;
-// const IPAddress STATIC_IP (10,10,50,201);
-// const IPAddress STATIC_GW (10,10,50,1);
-// const IPAddress STATIC_SN (255,255,255,0);
-// const IPAddress STATIC_DNS(10,10,50,1);
+constexpr bool USE_STATIC_IP = true;
+const IPAddress STATIC_IP (10,10,50,201);
+const IPAddress STATIC_GW (10,10,50,1);
+const IPAddress STATIC_SN (255,255,255,0);
+const IPAddress STATIC_DNS(10,10,50,1);
 
 // Home testing example
-constexpr bool USE_STATIC_IP = true;
-const IPAddress STATIC_IP(192, 168, 1, 99);
-const IPAddress STATIC_GW(192, 168, 1, 1);
-const IPAddress STATIC_SN(255, 255, 255, 0);
-const IPAddress STATIC_DNS(192, 168, 1, 1);
+//constexpr bool USE_STATIC_IP = true;
+//const IPAddress STATIC_IP(192, 168, 1, 99);
+//const IPAddress STATIC_GW(192, 168, 1, 1);
+//const IPAddress STATIC_SN(255, 255, 255, 0);
+//const IPAddress STATIC_DNS(192, 168, 1, 1);
 
 // keep-alive to prevent power bank sleep
 constexpr bool KEEPALIVE_ON_TIMEOUT = true;
-constexpr uint8_t KEEPALIVE_LEVEL = 2; // 0..255
+constexpr uint8_t KEEPALIVE_LEVEL = 3; // 0..255
 constexpr uint8_t KEEPALIVE_PIXEL = 0; // index
