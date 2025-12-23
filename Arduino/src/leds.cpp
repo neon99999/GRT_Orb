@@ -56,6 +56,24 @@ static void showOctet(uint8_t val, uint8_t r, uint8_t g, uint8_t b, uint8_t w, u
   delay(ms);
 }
 
+void ledsWriteSingle(uint16_t idx, uint8_t r, uint8_t g, uint8_t b, uint8_t w, uint8_t master)
+{
+  r = g8(min<uint8_t>(r, s_cap));
+  g = g8(min<uint8_t>(g, s_cap));
+  b = g8(min<uint8_t>(b, s_cap));
+  w = g8(min<uint8_t>(w, s_cap));
+  r = (uint16_t)r * master / 255;
+  g = (uint16_t)g * master / 255;
+  b = (uint16_t)b * master / 255;
+  w = (uint16_t)w * master / 255;
+  for (int i = 0; i < NUM_PIXELS; i++)
+  {
+    uint32_t c = (i == idx) ? pack(r, g, b, w) : pack(0, 0, 0, 0);
+    strip.setPixelColor(i, c);
+  }
+  strip.show();
+}
+
 void ledsShowIPOnce(IPAddress ip){
   showOctet(ip[0], 60, 0, 0, 0, 900);
   showOctet(ip[1], 0, 60, 0, 0, 900);
