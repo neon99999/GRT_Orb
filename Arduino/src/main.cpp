@@ -8,6 +8,10 @@
 
 constexpr int WDT_TIMEOUT_S = 5;
 
+constexpr uint32_t KEEPALIVE_PULSE_MS = 40;    // on-time
+constexpr uint32_t KEEPALIVE_PERIOD_MS = 1500; // repeat
+static uint32_t keepaliveLastMs = 0;
+
 // printing
 constexpr bool PRINT_ON_CHANGE = true;
 constexpr uint8_t CHANGE_THRESH = 1;
@@ -137,7 +141,12 @@ void loop()
   {
     if (KEEPALIVE_ON_TIMEOUT)
     {
-      ledsWriteSingle(KEEPALIVE_PIXEL, 0, 0, 0, KEEPALIVE_LEVEL, KEEPALIVE_LEVEL);
+      uint32_t now = millis();
+      uint32_t t = (now - keepaliveLastMs) % KEEPALIVE_PERIOD_MS;
+      if (t < KEEPALIVE_PULSE_MS)
+      {
+        ledsWriteSingle(KEEPALIVE_PIXEL, 0, 0, 0, KEEPALIVE_LEVEL, KEEPALIVE_LEVEL);
+      } // else do nothing (hold last or black)
     }
     else
     {
