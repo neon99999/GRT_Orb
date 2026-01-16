@@ -17,7 +17,6 @@
 
 1. In firmware this unit can run multicast. If needed, have the tech switch it
 2. Enable sACN multicast on Universe 1 in Eos
-3. Patch the same **U1@321..325**
 
 ### Channel map (Universe 1)
 
