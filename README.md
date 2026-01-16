@@ -12,14 +12,6 @@
 3. Patch → Protocols → sACN → Per-Universe Overrides
 
    * Universe 1 → Add Unicast target `10.10.50.201`
-4. Patch channels at **U1@321..325**
-
-   * 321 Intensity
-   * 322 Red
-   * 323 Green
-   * 324 Blue
-   * 325 White
-     Tip: make a 5-channel fixture profile with I R G B W
 
 **Multicast (older Eos)**
 
