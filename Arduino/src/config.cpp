@@ -2,7 +2,7 @@
 
 // --------- pick profile here ---------
 enum Profile { Studio, Theatre };
-static Profile ACTIVE_PROFILE = Studio;   // <--- change to Theatre when needed
+static Profile ACTIVE_PROFILE = Theatre;   // <--- change to Theatre when needed
 // -------------------------------------
 
 // Declarations (storage)
@@ -68,8 +68,8 @@ static void loadTheatre(){
   START_ADDR    = 321;
   USE_UNICAST   = true;
 
-  NUM_PIXELS               = 60;
-  DEFAULT_BRIGHTNESS_CAP   = 155;
+  NUM_PIXELS               = 25;
+  DEFAULT_BRIGHTNESS_CAP   = 220;
 
   DMX_TIMEOUT_MS           = 3000;
   KEEPALIVE_ON_TIMEOUT     = true;
