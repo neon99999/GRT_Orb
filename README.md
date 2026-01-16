@@ -1,6 +1,6 @@
-# The ORB — ESP32 sACN IRGB
+# The ORB v2 — ESP32 sACN IRGB
 
-## For the lighting op
+## For Lighting Operator
 
 ### Eos setup (Element or any Eos-family)
 
@@ -45,7 +45,7 @@ That’s it. Bring up 321, set color with 322–325, or use 397–399 to flood a
 
 ---
 
-## For the tech
+## Technical Wiring
 
 ### Hardware
 
@@ -137,5 +137,3 @@ That’s it. Bring up 321, set color with 322–325, or use 397–399 to flood a
 * Per-pixel: **P1 325..327**, **P25 394..396**
 * Broadcast RGB: **397..399**
 * ESP32 IP: **10.10.50.201**
-
-If you want this as a printable PDF or need the TD example network saved with the routing table, say the word and I’ll export both.
