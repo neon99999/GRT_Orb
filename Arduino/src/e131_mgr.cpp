@@ -7,25 +7,19 @@ void e131Init(){
   e131.begin(USE_UNICAST ? E131_UNICAST : E131_MULTICAST, E131_UNIVERSE);
   Serial.println(USE_UNICAST ? "sACN: unicast" : "sACN: multicast");
   Serial.print("Universe: "); Serial.println(E131_UNIVERSE);
-  Serial.print("DMX start addr: "); Serial.println(START_ADDR);
 }
 
-bool e131Poll(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& w, uint8_t& dim, uint8_t& seq){
+bool e131PollRaw(uint8_t* outBuf, uint16_t& outLen, uint8_t& seq){
   if (e131.isEmpty()) return false;
 
   e131_packet_t p;
   e131.pull(&p);
-  uint8_t* dmx = p.property_values + 1; // skip start code
-  uint16_t s = START_ADDR ? START_ADDR - 1 : 0;
 
-  r = g = b = w = dim = 0;
-  if (s + 4 < 512){
-    dim = dmx[s + 0];  // I at N
-    r   = dmx[s + 1];  // R at N+1
-    g   = dmx[s + 2];  // G at N+2
-    b   = dmx[s + 3];  // B at N+3
-    w   = dmx[s + 4];  // W at N+4
-  }
+  // DMX payload after start code
+  const uint8_t* dmx = p.property_values + 1;
+  // packet length is always up to 512 for DMX512
+  outLen = 512;
+  memcpy(outBuf, dmx, outLen);
 
   seq = p.sequence_number;
   return true;

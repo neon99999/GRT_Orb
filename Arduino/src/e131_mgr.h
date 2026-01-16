@@ -2,5 +2,9 @@
 #include <Arduino.h>
 #include <ESPAsyncE131.h>
 
+// init socket
 void e131Init();
-bool e131Poll(uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& w, uint8_t& dim, uint8_t& seq);
+
+// raw poll: copies DMX payload (512 bytes, start code skipped) to outBuf
+// returns true if a packet was pulled
+bool e131PollRaw(uint8_t* outBuf, uint16_t& outLen, uint8_t& seq);

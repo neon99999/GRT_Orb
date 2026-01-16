@@ -1,44 +1,45 @@
 #pragma once
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
+#include <WiFi.h>
 
-// provided in config.cpp
-extern const char WIFI_SSID[];
-extern const char WIFI_PASSWORD[];
-
-// sACN mapping
-constexpr uint16_t E131_UNIVERSE = 1;
-constexpr uint16_t START_ADDR = 321; // I R G B W at 321..325
-constexpr bool USE_UNICAST = true;
-
-// hardware
-constexpr int LED_PIN = 5;
-constexpr int NUM_PIXELS = 12;
+// ---------- Compile-time hardware ----------
+constexpr int LED_PIN    = 5;
 constexpr int STATUS_LED = 2;
+#define PIXEL_ORDER (NEO_GRB + NEO_KHZ800)
 
-// RGBW order for Adafruit 12-ring
-#define PIXEL_ORDER (NEO_GRBW + NEO_KHZ800)
+// NeoPixel needs a compile-time length at construction if you use the
+// convenience ctor. We'll construct dynamically, but also keep a safe max
+#ifndef MAX_PIXELS
+#define MAX_PIXELS 170   // one sACN universe of RGB plus master + broadcast
+#endif
 
-// safety and behavior
-constexpr uint8_t DEFAULT_BRIGHTNESS_CAP = 155;
-constexpr uint32_t DMX_TIMEOUT_MS = 3000;
+// ---------- Runtime-tunable (live in config.cpp) ----------
+extern const char* WIFI_SSID;
+extern const char* WIFI_PASSWORD;
 
-// IP tuple
-// Theatre router example
-constexpr bool USE_STATIC_IP = true;
-const IPAddress STATIC_IP (10,10,50,201);
-const IPAddress STATIC_GW (10,10,50,1);
-const IPAddress STATIC_SN (255,255,255,0);
-const IPAddress STATIC_DNS(10,10,50,1);
+extern uint16_t E131_UNIVERSE;
+extern uint16_t START_ADDR;          // 321 for master + per-pixel RGB
+extern bool     USE_UNICAST;
 
-// Home testing example
-//constexpr bool USE_STATIC_IP = true;
-//const IPAddress STATIC_IP(192, 168, 1, 99);
-//const IPAddress STATIC_GW(192, 168, 1, 1);
-//const IPAddress STATIC_SN(255, 255, 255, 0);
-//const IPAddress STATIC_DNS(192, 168, 1, 1);
+extern int      NUM_PIXELS;          // strip length at runtime
 
-// keep-alive to prevent power bank sleep
-constexpr bool KEEPALIVE_ON_TIMEOUT = true;
-constexpr uint8_t KEEPALIVE_LEVEL = 3; // 0..255
-constexpr uint8_t KEEPALIVE_PIXEL = 0; // index
+extern uint8_t  DEFAULT_BRIGHTNESS_CAP;
+extern uint32_t DMX_TIMEOUT_MS;
+
+// Static IP tuple
+extern bool      USE_STATIC_IP;
+extern IPAddress STATIC_IP;
+extern IPAddress STATIC_GW;
+extern IPAddress STATIC_SN;
+extern IPAddress STATIC_DNS;
+
+// Keep-alive behavior
+extern bool     KEEPALIVE_ON_TIMEOUT;
+extern uint8_t  KEEPALIVE_LEVEL;
+extern uint8_t  KEEPALIVE_PIXEL;
+extern uint32_t KEEPALIVE_PULSE_MS;
+extern uint32_t KEEPALIVE_PERIOD_MS;
+
+extern uint16_t IDLE_TIMEOUT_MS;   // how long of blackout before keepalive
+extern uint8_t  MIN_IDLE_MASTER;   // optional floor for master during blackout

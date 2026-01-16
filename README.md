@@ -21,6 +21,44 @@
 3. Patch as above at U1\@321..325
 
 
+## Pixel Mapping
+
+321 = Global Intensity
+322..396 = per-pixel RGB (25 × 3)
+397 = Broadcast R, 398 = Broadcast G, 399 = Broadcast B
+
+### Per-pixel block (U1)
+P1 R=322 G=323 B=324
+P2 R=325 G=326 B=327
+P3 R=328 G=329 B=330
+P4 R=331 G=332 B=333
+P5 R=334 G=335 B=336
+P6 R=337 G=338 B=339
+P7 R=340 G=341 B=342
+P8 R=343 G=344 B=345
+P9 R=346 G=347 B=348
+P10 R=349 G=350 B=351
+P11 R=352 G=353 B=354
+P12 R=355 G=356 B=357
+P13 R=358 G=359 B=360
+P14 R=361 G=362 B=363
+P15 R=364 G=365 B=366
+P16 R=367 G=368 B=369
+P17 R=370 G=371 B=372
+P18 R=373 G=374 B=375
+P19 R=376 G=377 B=378
+P20 R=379 G=380 B=381
+P21 R=382 G=383 B=384
+P22 R=385 G=386 B=387
+P23 R=388 G=389 B=390
+P24 R=391 G=392 B=393
+P25 R=394 G=395 B=396
+
+### Broadcast override (U1)
+R=397 G=398 B=399
+If any of these three > 0, all pixels show that color, multiplied by channel 321.
+
+
 ## Parts
 
 * ESP32 dev board
