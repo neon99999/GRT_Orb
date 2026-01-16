@@ -1,125 +1,141 @@
-# ESP32 sACN IRGBW Ring
+# The ORB — ESP32 sACN IRGB
 
-## Eos Element setup
+## For the lighting op
 
-**If Eos v3.2+ and you want unicast**
+### Eos setup (Element or any Eos-family)
 
-1. Console NIC static: IP 10.10.50.2, mask 255.255.255.0, gateway 10.10.50.1
-2. Enable sACN on that NIC
+**Unicast (preferred, Eos v3.2+)**
+
+1. Set the console NIC to static
+   IP `10.10.50.2` • Mask `255.255.255.0` • Gateway `10.10.50.1`
+2. Settings → sACN → enable on that NIC
 3. Patch → Protocols → sACN → Per-Universe Overrides
 
-   * Universe 1 → add unicast 10.10.50.201
-4. Patch at Universe 1 address 321
+   * Universe 1 → Add Unicast target `10.10.50.201`
+4. Patch channels at **U1@321..325**
 
-   * Quick: patch five channels at U1\@321..325 named I R G B W
-   * Better: make a 5-channel fixture with parameters Intensity Red Green Blue White
+   * 321 Intensity
+   * 322 Red
+   * 323 Green
+   * 324 Blue
+   * 325 White
+     Tip: make a 5-channel fixture profile with I R G B W
 
-**If your Eos does not have unicast**
+**Multicast (older Eos)**
 
-1. Set `USE_UNICAST = false` in firmware and reflash
-2. Enable sACN multicast for Universe 1
-3. Patch as above at U1\@321..325
+1. In firmware this unit can run multicast. If needed, have the tech switch it
+2. Enable sACN multicast on Universe 1 in Eos
+3. Patch the same **U1@321..325**
 
+### Channel map (Universe 1)
 
-## Pixel Mapping
+* **321** = Global Intensity
+* **322..396** = Per-pixel RGB, 25 pixels total
 
-321 = Global Intensity
-322..396 = per-pixel RGB (25 × 3)
-397 = Broadcast R, 398 = Broadcast G, 399 = Broadcast B
+  * P1 R=325 G=326 B=327
+  * P2 R=328 G=329 B=330
+  * …
+  * P25 R=394 G=395 B=396
+* **Broadcast override**
 
-### Per-pixel block (U1)
+  * **397** = R, **398** = G, **399** = B
+  * If any of these is >0 the whole strip takes that RGB, scaled by 321
 
-(P1 R=325 G=326 B=327) , (P2 R=328 G=329 B=330), (P3 R=331 G=332 B=333), ... (P25 R=394 G=395 B=396)
+That’s it. Bring up 321, set color with 322–325, or use 397–399 to flood all pixels.
 
-### Broadcast override (U1)
-R=397 G=398 B=399
-If any of these three > 0, all pixels show that color, multiplied by channel 321.
+---
 
+## For the tech
 
-## Parts
+### Hardware
 
 * ESP32 dev board
-* 2 Adafruit NeoPixel 12-LED RGBW rings
-* SparkFun BSS138 level shifter BOB-12009
-* 2 x 330 Ω resistors
-* 2 x 1000 µF electrolytic caps (one per ring)
-* GL-SFT1200 router
-* 5 V USB-C power bank (3A)
-* USB A-C Cable
-* USB C-C Cable
+* WS2812B strip (5 V) or NeoPixel GRB/GRBW rings
+* 330 Ω on DIN
+* 1000 µF across +5 and GND at the strip
+* Optional level shifter if your run is long
+* Power: 5 V USB-C bank that can supply 2–3 A
 
-## Wiring (mirror mode, 2 rings)
+**Mirror mode**: drive two rings by splitting the same data line after the 330 Ω, each ring has its own 1000 µF, power is star-wired from 5 V.
 
-1. Star power from 5 V source
+### Router
 
-   * +5 V → ESP32 Vin, Ring A +5, Ring B +5
-   * GND → ESP32 GND, Ring A GND, Ring B GND
-2. Level shifter
+* GL-SFT1200 (or similar)
+* LAN IP `10.10.50.1`
+* DHCP pool `10.10.50.100–10.10.50.150`
+* 2.4 GHz only, 20 MHz width, visible SSID, WPA2-PSK AES
+* Fixed channel 1 or 6 or 11
+* No internet required
 
-   * LV → ESP32 3V3, HV → +5 V, GND common
-   * ESP32 data GPIO → LV1
-   * HV1 → 330 Ω → Ring A DIN
-   * HV1 → another 330 Ω → Ring B DIN
-3. Caps
+### Unit IP
 
-   * 1000 µF across +5 and GND on each ring (close to pads)
-4. Switch
+* ESP32 static IP `10.10.50.201/24`
+* Gateway `10.10.50.1`
+* DNS `10.10.50.1` or `0.0.0.0`
+  Console can be `10.10.50.2/24`
 
-   * Switch +5 V, never ground
+### Firmware knobs (in `config.cpp`)
 
-## Firmware
+* `USE_UNICAST = true` for Eos unicast, false for multicast
+* `E131_UNIVERSE = 1`
+* `START_ADDR = 321`
+* `NUM_PIXELS = 25`
+* Brightness cap: `DEFAULT_BRIGHTNESS_CAP = 180` (helps headroom)
+* Idle handling:
 
-1. Open the PlatformIO project
-2. Edit `src/config.cpp`
+  * `IDLE_TIMEOUT_MS = 3000`
+  * If you must keep banks awake, choose one:
 
-   ```cpp
-   const char WIFI_SSID[]     = "YOUR_SSID";
-   const char WIFI_PASSWORD[] = "YOUR_PASSWORD";
-   ```
-3. Edit `src/config.h`
+    * **Software**: set a very faint steady floor with `MIN_IDLE_MASTER = 2..6`
+      This is visible, tape over one end pixel if needed
+    * **Hardware**: add a 220 Ω 0.5 W across +5 and GND at the strip for ~23 mA with no light
 
-   ```cpp
-   constexpr bool     USE_UNICAST    = true;      // set false if your Eos lacks unicast
-   constexpr uint16_t E131_UNIVERSE  = 1;
-   constexpr uint16_t START_ADDR     = 321;       // IRGBW at 321..325
-   constexpr uint8_t  DEFAULT_BRIGHTNESS_CAP = 155;
+### TouchDesigner testing
 
-   constexpr bool USE_STATIC_IP = true;
-   const IPAddress STATIC_IP (10,10,50,201);
-   const IPAddress STATIC_GW (10,10,50,1);
-   const IPAddress STATIC_SN (255,255,255,0);
-   const IPAddress STATIC_DNS(10,10,50,1);
-   ```
-4. Build and upload
-5. On boot the ring blinks the IP and Serial prints the IP and sACN status
+* DMX Out CHOP → Interface sACN
+* Universe 1
+* Unicast to `10.10.50.201` or broadcast if testing multicast
+* Feed 399 channels with a CHOP
 
-## Router (GL-SFT1200)
+  * Leave channels 1..320 empty
+  * Fill 321..399 as per map above
+* Rate ≤ 44 Hz
 
-1. LAN IP 10.10.50.1
-2. DHCP pool 10.10.50.100–10.10.50.150
-3. 2.4 GHz only, SSID visible, WPA2-PSK AES
-4. Channel width 20 MHz, fixed channel 1 (try 6 or 11 if needed)
-5. Band steering off, client/AP isolation off
+### Build
 
+* PlatformIO → env `esp32dev` (or your board)
+* `lib_deps`: Adafruit NeoPixel, ESPAsyncE131
+* Upload, open Serial at 115200
 
-## Use
+  * On boot you’ll see IP and a short status log
 
-1. Power router, then ESP32
-2. Confirm ESP32 IP shows as 10.10.50.201
-3. From console PC, ping 10.10.50.201
-4. Bring up Intensity, then color on the console at U1\@321..325
-5. For two rings both will mirror
+### Power notes
 
-## Power notes
+* A single 25-LED strip full white can draw up to 25 × 60 mA ≈ 1.5 A at the LEDs
+* With cap 180 and typical looks you’ll be well under that
+* Do not feed LED power through the ESP32 Vin trace
+* Keep 5 V and GND short and fat, cap at the strip pads
 
-* Two rings at cap 155 draw about 1.3 A total including ESP32
-* Use a 3 A-rated USB-C output and short cable
-* Keep caps on each ring
-* Do not run ring power through the ESP32 board traces
+### Troubleshooting
 
-## Troubleshooting
+* No response: ping `10.10.50.201`, check Universe 1 enabled, addresses 321..325
+* Colors wrong: set `PIXEL_ORDER` to match your LEDs (GRB is common)
+* Blanking near full: keep cap at the end of the strip, shorten 5 V leads, brightness cap 180–200
+* Bank sleep during blackout:
 
-* No light: check Universe 1 active, addresses 321..325, same subnet
-* Old Eos: use multicast and set firmware to `USE_UNICAST = false`
-* Blacks out at high levels: measure volts across the ring cap, shorten and thicken +5 V and GND, keep cap ≥1000 µF
-* Wrong colors: change `PIXEL_ORDER` to `NEO_RGBW` and rebuild
+  * Use the hardware dummy load (220 Ω) for zero-light keep-alive
+  * Or a taped pixel with tiny pulse if that is acceptable
+* Multicast noise in heavy RF: switch to unicast and a fixed clean channel
+
+---
+
+## Quick reference
+
+* Universe: **1**
+* Start address: **321**
+* Global Intensity: **321**
+* Per-pixel: **P1 325..327**, **P25 394..396**
+* Broadcast RGB: **397..399**
+* ESP32 IP: **10.10.50.201**
+
+If you want this as a printable PDF or need the TD example network saved with the routing table, say the word and I’ll export both.
