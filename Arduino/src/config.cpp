@@ -7,7 +7,7 @@ enum Profile
   Studio,
   Theatre
 };
-static Profile ACTIVE_PROFILE = Theatre;
+static Profile ACTIVE_PROFILE = Studio;
 
 // Declarations
 const char *WIFI_SSID;
@@ -31,7 +31,7 @@ uint8_t RUN_MODE = MODE_PERPIXEL;
 static void loadStudio()
 {
   WIFI_SSID = "flubbyLindo";
-  WIFI_PASSWORD = "xxxxxxxxxx";
+  WIFI_PASSWORD = "LaIslaSol2022!";
 
   E131_UNIVERSE = 1;
   START_ADDR = 321;
