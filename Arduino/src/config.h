@@ -4,42 +4,47 @@
 #include <WiFi.h>
 
 // ---------- Compile-time hardware ----------
-constexpr int LED_PIN    = 5;
+constexpr int LED_PIN = 5;
 constexpr int STATUS_LED = 2;
 #define PIXEL_ORDER (NEO_GRB + NEO_KHZ800)
 
-// NeoPixel needs a compile-time length at construction if you use the
-// convenience ctor. We'll construct dynamically, but also keep a safe max
+// safe ceiling for buffer allocation
 #ifndef MAX_PIXELS
-#define MAX_PIXELS 170   // one sACN universe of RGB plus master + broadcast
+#define MAX_PIXELS 170
 #endif
 
-// ---------- Runtime-tunable (live in config.cpp) ----------
-extern const char* WIFI_SSID;
-extern const char* WIFI_PASSWORD;
+// ---------- Runtime (storage in config.cpp) ----------
+extern const char *WIFI_SSID;
+extern const char *WIFI_PASSWORD;
 
 extern uint16_t E131_UNIVERSE;
-extern uint16_t START_ADDR;          // 321 for master + per-pixel RGB
-extern bool     USE_UNICAST;
+extern uint16_t START_ADDR; // DMX start address (1..512)
+extern bool USE_UNICAST;
 
-extern int      NUM_PIXELS;          // strip length at runtime
-
-extern uint8_t  DEFAULT_BRIGHTNESS_CAP;
+extern int NUM_PIXELS; // strip length
+extern uint8_t DEFAULT_BRIGHTNESS_CAP;
 extern uint32_t DMX_TIMEOUT_MS;
 
 // Static IP tuple
-extern bool      USE_STATIC_IP;
+extern bool USE_STATIC_IP;
 extern IPAddress STATIC_IP;
 extern IPAddress STATIC_GW;
 extern IPAddress STATIC_SN;
 extern IPAddress STATIC_DNS;
 
-// Keep-alive behavior
-extern bool     KEEPALIVE_ON_TIMEOUT;
-extern uint8_t  KEEPALIVE_LEVEL;
-extern uint8_t  KEEPALIVE_PIXEL;
+// Idle / keepalive
+extern bool KEEPALIVE_ON_TIMEOUT;
+extern uint8_t KEEPALIVE_LEVEL;
+extern uint8_t KEEPALIVE_PIXEL;
 extern uint32_t KEEPALIVE_PULSE_MS;
 extern uint32_t KEEPALIVE_PERIOD_MS;
+extern uint16_t IDLE_TIMEOUT_MS;
+extern uint8_t MIN_IDLE_MASTER;
 
-extern uint16_t IDLE_TIMEOUT_MS;   // how long of blackout before keepalive
-extern uint8_t  MIN_IDLE_MASTER;   // optional floor for master during blackout
+// Run mode
+enum RunMode : uint8_t
+{
+    MODE_4CH = 0,     // I R G B control the whole strip
+    MODE_PERPIXEL = 1 // I + N×RGB per pixel
+};
+extern uint8_t RUN_MODE;
