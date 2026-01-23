@@ -113,9 +113,6 @@ void loop()
           ledsWriteStripRGB(pixBuf, NUM_PIXELS, gi);
       }
     }
-
-    if (litThisFrame)
-      lastActiveMs = millis();
   }
 
   // heartbeat
@@ -123,6 +120,7 @@ void loop()
   {
     uint32_t elapsed = millis() - hbStartMs;
     float pps = elapsed ? (1000.0f * pktCount / elapsed) : 0.0f;
+
     Serial.print("U");
     Serial.print(E131_UNIVERSE);
     Serial.print(" pps ");
@@ -133,6 +131,7 @@ void loop()
     Serial.print(WiFi.RSSI());
     Serial.print(" dBm heap ");
     Serial.println(ESP.getFreeHeap());
+
     pktCount = 0;
     lossCount = 0;
     hbStartMs = millis();
