@@ -1,13 +1,13 @@
 // config.cpp
 #include "config.h"
 
-// pick profile here
+// pick profile heree
 enum Profile
 {
   Studio,
   Theatre
 };
-static Profile ACTIVE_PROFILE = Studio;
+static Profile ACTIVE_PROFILE = Theatre;
 
 // Declarations
 const char *WIFI_SSID;
@@ -31,7 +31,7 @@ uint8_t RUN_MODE = MODE_PERPIXEL;
 static void loadStudio()
 {
   WIFI_SSID = "flubbyLindo";
-  WIFI_PASSWORD = "LaIslaSol2022!";
+  WIFI_PASSWORD = "xxxx";
 
   E131_UNIVERSE = 1;
   START_ADDR = 321;
