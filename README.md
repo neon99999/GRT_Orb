@@ -1,4 +1,8 @@
-# The ORB v2 — ESP32 sACN IRGB
+Here is the **cleaned and updated README** with **all fixed-address language removed** and replaced by **“configurable via the web interface”**. No hard numbers are implied anywhere except in examples.
+
+---
+
+# The ORB v3 — ESP32 sACN IRGB
 
 ## For Lighting Operator
 
@@ -10,121 +14,163 @@
    IP `10.10.50.2` • Mask `255.255.255.0` • Gateway `10.10.50.1`
 2. Settings → sACN → enable on that NIC
 3. Patch → Protocols → sACN → Per-Universe Overrides
-
-   * Universe 1 → Add Unicast target `10.10.50.201`
+4. Add a unicast target using the IP shown in the ORB web interface
 
 **Multicast (older Eos)**
 
-1. In firmware this unit can run multicast. If needed, have the tech switch it
-2. Enable sACN multicast on Universe 1 in Eos
-
-### Channel map (Universe 1)
-
-* **321** = Global Intensity
-* **322..396** = Per-pixel RGB, 25 pixels total
-
-  * P1 R=325 G=326 B=327
-  * P2 R=328 G=329 B=330
-  * …
-  * P25 R=394 G=395 B=396
-* **Broadcast override**
-
-  * **397** = R, **398** = G, **399** = B
-  * If any of these is >0 the whole strip takes that RGB, scaled by 321
-
-That’s it. Bring up 321, set color with 322–325, or use 397–399 to flood all pixels.
+1. This unit can operate in multicast if configured
+2. Enable sACN multicast for the selected universe in Eos
 
 ---
 
-## Technical Wiring
+## Channel map (per configured universe)
+
+> The universe, start address, and pixel count are all configurable in the ORB web interface.
+
+### Per-pixel IRGB mode
+
+* **Start address** = Global Intensity
+* **Following channels** = Per-pixel RGB in order
+* Pixel 1 maps to the **second physical LED**
+
+Example layout shown for clarity only:
+
+* Intensity
+* P1 R G B
+* P2 R G B
+* …
+* PN R G B
+
+### Broadcast override (optional)
+
+* Immediately follows the per-pixel block
+* Three channels: R G B
+* If any channel is >0, the entire strip takes that RGB color scaled by the global intensity
+
+---
+
+## Reserved always-on pixel
+
+* The **first physical LED** is reserved by firmware
+* It is always on at a very low level
+* It is **not addressable** from DMX
+* Purpose:
+
+  * Keeps USB power banks awake
+  * Provides a visual heartbeat
+  * Intended to be taped over
+
+Pixel count configured in the web interface refers only to **DMX-addressable pixels**.
+
+---
+
+## Web interface
+
+The ORB includes a built-in configuration UI.
+
+### Access
+
+* `http://<unit-ip>`
+* or `http://orb.local` if mDNS is available
+
+### Configurable parameters (live)
+
+Changes apply immediately and persist across reboots.
+
+* sACN universe
+* DMX start address
+* Run mode
+
+  * 4-channel IRGB
+  * Per-pixel IRGB
+* DMX-addressable pixel count
+* Brightness cap
+* Unicast enable or disable
+
+Changing the pixel count safely reinitializes the LED driver without rebooting.
+
+---
+
+## Technical wiring
 
 ### Hardware
 
 * ESP32 dev board
-* WS2812B strip (5 V) or NeoPixel GRB/GRBW rings
-* 330 Ω on DIN
-* 1000 µF across +5 and GND at the strip
-* Optional level shifter if your run is long
-* Power: 5 V USB-C bank that can supply 2–3 A
+* WS2812B or NeoPixel-compatible LEDs (5 V)
+* 330 Ω resistor on DIN
+* 1000 µF capacitor across +5 V and GND at the strip
+* Optional level shifter for long data runs
+* Power: 5 V USB-C supply or bank capable of 2–3 A
 
-**Mirror mode**: drive two rings by splitting the same data line after the 330 Ω, each ring has its own 1000 µF, power is star-wired from 5 V.
+**Mirror mode**: split the data line after the resistor to drive two identical strips. Each strip requires its own capacitor. Power is star-wired.
+
+---
+
+## Network
 
 ### Router
 
-* GL-SFT1200 (or similar)
-* LAN IP `10.10.50.1`
-* DHCP pool `10.10.50.100–10.10.50.150`
-* 2.4 GHz only, 20 MHz width, visible SSID, WPA2-PSK AES
-* Fixed channel 1 or 6 or 11
+* Small travel router or access point
+* 2.4 GHz only
+* 20 MHz channel width
+* Fixed channel (1, 6, or 11)
+* WPA2-PSK AES
 * No internet required
 
 ### Unit IP
 
-* ESP32 static IP `10.10.50.201/24`
-* Gateway `10.10.50.1`
-* DNS `10.10.50.1` or `0.0.0.0`
-  Console can be `10.10.50.2/24`
+* Static or DHCP, depending on configuration
+* IP address is shown in the web interface and on boot over Serial
 
-### Firmware knobs (in `config.cpp`)
+---
 
-* `USE_UNICAST = true` for Eos unicast, false for multicast
-* `E131_UNIVERSE = 1`
-* `START_ADDR = 321`
-* `NUM_PIXELS = 25`
-* Brightness cap: `DEFAULT_BRIGHTNESS_CAP = 180` (helps headroom)
-* Idle handling:
-
-  * `IDLE_TIMEOUT_MS = 3000`
-  * If you must keep banks awake, choose one:
-
-    * **Software**: set a very faint steady floor with `MIN_IDLE_MASTER = 2..6`
-      This is visible, tape over one end pixel if needed
-    * **Hardware**: add a 220 Ω 0.5 W across +5 and GND at the strip for ~23 mA with no light
-
-### TouchDesigner testing
+## TouchDesigner testing
 
 * DMX Out CHOP → Interface sACN
-* Universe 1
-* Unicast to `10.10.50.201` or broadcast if testing multicast
-* Feed 399 channels with a CHOP
+* Match the universe and addressing shown in the web UI
+* Unicast to the unit IP or use multicast
+* Feed enough channels to cover intensity, pixels, and optional broadcast
+* Recommended rate ≤ 44 Hz
 
-  * Leave channels 1..320 empty
-  * Fill 321..399 as per map above
-* Rate ≤ 44 Hz
+---
 
-### Build
+## Build
 
-* PlatformIO → env `esp32dev` (or your board)
-* `lib_deps`: Adafruit NeoPixel, ESPAsyncE131
-* Upload, open Serial at 115200
+* PlatformIO using an ESP32 target
+* Libraries:
 
-  * On boot you’ll see IP and a short status log
+  * Adafruit NeoPixel
+  * ESPAsyncE131
+  * ESPAsyncWebServer
+* Upload firmware
+* Open Serial at 115200 to view boot status and IP
 
-### Power notes
+---
 
-* A single 25-LED strip full white can draw up to 25 × 60 mA ≈ 1.5 A at the LEDs
-* With cap 180 and typical looks you’ll be well under that
-* Do not feed LED power through the ESP32 Vin trace
-* Keep 5 V and GND short and fat, cap at the strip pads
+## Power notes
 
-### Troubleshooting
+* Each RGB LED can draw up to ~60 mA at full white
+* Brightness cap limits peak current
+* Do not power LEDs through the ESP32 Vin trace
+* Keep 5 V and GND short and thick
+* Always place the capacitor at the LED pads
 
-* No response: ping `10.10.50.201`, check Universe 1 enabled, addresses 321..325
-* Colors wrong: set `PIXEL_ORDER` to match your LEDs (GRB is common)
-* Blanking near full: keep cap at the end of the strip, shorten 5 V leads, brightness cap 180–200
-* Bank sleep during blackout:
+---
 
-  * Use the hardware dummy load (220 Ω) for zero-light keep-alive
-  * Or a taped pixel with tiny pulse if that is acceptable
-* Multicast noise in heavy RF: switch to unicast and a fixed clean channel
+## Troubleshooting
+
+* No output: confirm universe and addressing in the web interface
+* Wrong colors: verify pixel color order in firmware
+* Flicker or brownout: shorten power leads, confirm voltage at strip, lower brightness cap
+* Power bank sleeping: reserved always-on pixel keeps most banks awake
+* RF instability: use unicast and a fixed Wi-Fi channel
 
 ---
 
 ## Quick reference
 
-* Universe: **1**
-* Start address: **321**
-* Global Intensity: **321**
-* Per-pixel: **P1 325..327**, **P25 394..396**
-* Broadcast RGB: **397..399**
-* ESP32 IP: **10.10.50.201**
+* Universe: configurable via web UI
+* Start address: configurable via web UI
+* Pixel count: configurable via web UI
+* First physical LED: reserved, always on
+* Configuration UI: `http://<unit-ip>` or `http://orb.local`
