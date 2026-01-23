@@ -2,7 +2,7 @@ Here is the **cleaned and updated README** with **all fixed-address language rem
 
 ---
 
-# The ORB v3 — ESP32 sACN IRGB
+# The ORB ESP32 sACN IRGB
 
 ## For Lighting Operator
 
