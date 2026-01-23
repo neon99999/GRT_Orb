@@ -1,3 +1,4 @@
+// config.h
 #pragma once
 #include <Arduino.h>
 #include <Adafruit_NeoPixel.h>
@@ -7,6 +8,15 @@
 constexpr int LED_PIN = 5;
 constexpr int STATUS_LED = 2;
 #define PIXEL_ORDER (NEO_GRB + NEO_KHZ800)
+
+// ---------- Reserved "always-on" pixel ----------
+// Physical pixel 0 is not addressable from DMX. It is always on at a low level.
+// The first DMX-controlled pixel maps to physical index 1.
+constexpr uint16_t RESERVED_PIXEL_INDEX = 0;
+// Low-level RGB for the taped-over pixel (tweak if desired)
+constexpr uint8_t RESERVED_PIXEL_R = 30;
+constexpr uint8_t RESERVED_PIXEL_G = 30;
+constexpr uint8_t RESERVED_PIXEL_B = 30;
 
 // safe ceiling for buffer allocation
 #ifndef MAX_PIXELS
@@ -21,7 +31,7 @@ extern uint16_t E131_UNIVERSE;
 extern uint16_t START_ADDR; // DMX start address (1..512)
 extern bool USE_UNICAST;
 
-extern int NUM_PIXELS; // strip length
+extern int NUM_PIXELS; // DMX-addressable pixel count (physical pixels = NUM_PIXELS + 1)
 extern uint8_t DEFAULT_BRIGHTNESS_CAP;
 extern uint32_t DMX_TIMEOUT_MS;
 
@@ -31,15 +41,6 @@ extern IPAddress STATIC_IP;
 extern IPAddress STATIC_GW;
 extern IPAddress STATIC_SN;
 extern IPAddress STATIC_DNS;
-
-// Idle / keepalive
-extern bool KEEPALIVE_ON_TIMEOUT;
-extern uint8_t KEEPALIVE_LEVEL;
-extern uint8_t KEEPALIVE_PIXEL;
-extern uint32_t KEEPALIVE_PULSE_MS;
-extern uint32_t KEEPALIVE_PERIOD_MS;
-extern uint16_t IDLE_TIMEOUT_MS;
-extern uint8_t MIN_IDLE_MASTER;
 
 // Run mode
 enum RunMode : uint8_t
