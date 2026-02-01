@@ -30,7 +30,7 @@ uint8_t RUN_MODE = MODE_PERPIXEL;
 // ---------- Loaders ----------
 static void loadStudio()
 {
-  WIFI_SSID = "flubbyLindo";
+  WIFI_SSID = "CuatroCabezas";
   WIFI_PASSWORD = "xxxx";
 
   E131_UNIVERSE = 1;
@@ -39,7 +39,7 @@ static void loadStudio()
 
   // NUM_PIXELS is the count you can control from DMX.
   // Physical strip will be treated as NUM_PIXELS + 1 (pixel 0 reserved).
-  NUM_PIXELS = 24;
+  NUM_PIXELS = 23;
   DEFAULT_BRIGHTNESS_CAP = 200;
 
   DMX_TIMEOUT_MS = 3000;
@@ -64,8 +64,8 @@ static void loadTheatre()
 
   // NUM_PIXELS is the count you can control from DMX.
   // Physical strip will be treated as NUM_PIXELS + 1 (pixel 0 reserved).
-  NUM_PIXELS = 24;
-  DEFAULT_BRIGHTNESS_CAP = 180;
+  NUM_PIXELS = 23;
+  DEFAULT_BRIGHTNESS_CAP = 200;
 
   DMX_TIMEOUT_MS = 3000;
 

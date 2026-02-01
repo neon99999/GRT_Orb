@@ -14,9 +14,9 @@ constexpr int STATUS_LED = 2;
 // The first DMX-controlled pixel maps to physical index 1.
 constexpr uint16_t RESERVED_PIXEL_INDEX = 0;
 // Low-level RGB for the taped-over pixel (tweak if desired)
-constexpr uint8_t RESERVED_PIXEL_R = 30;
-constexpr uint8_t RESERVED_PIXEL_G = 30;
-constexpr uint8_t RESERVED_PIXEL_B = 30;
+constexpr uint8_t RESERVED_PIXEL_R = 120;
+constexpr uint8_t RESERVED_PIXEL_G = 120;
+constexpr uint8_t RESERVED_PIXEL_B = 120;
 
 // safe ceiling for buffer allocation
 #ifndef MAX_PIXELS
