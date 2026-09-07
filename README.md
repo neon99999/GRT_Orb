@@ -1,7 +1,3 @@
-Here is the **cleaned and updated README** with **all fixed-address language removed** and replaced by **“configurable via the web interface”**. No hard numbers are implied anywhere except in examples.
-
----
-
 # The ORB ESP32 sACN IRGB
 
 ## For Lighting Operator
