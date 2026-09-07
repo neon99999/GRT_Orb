@@ -6,11 +6,10 @@
 
 **Unicast (preferred, Eos v3.2+)**
 
-1. Set the console NIC to static
-   IP `10.10.50.2` • Mask `255.255.255.0` • Gateway `10.10.50.1`
+1. Set the console NIC to static IP `10.10.50.2` • Mask `255.255.255.0` • Gateway `10.10.50.1`
 2. Settings → sACN → enable on that NIC
 3. Patch → Protocols → sACN → Per-Universe Overrides
-4. Add a unicast target using the IP shown in the ORB web interface
+4. Add a unicast target using the ORB IP
 
 **Multicast (older Eos)**
 
@@ -21,7 +20,7 @@
 
 ## Channel map (per configured universe)
 
-> The universe, start address, and pixel count are all configurable in the ORB web interface.
+> The universe, start address and pixel count are all configurable in the ORB web interface.
 
 ### Per-pixel IRGB mode
 
@@ -52,11 +51,13 @@ Example layout shown for clarity only:
 * It is **not addressable** from DMX
 * Purpose:
 
-  * Keeps USB power banks awake
-  * Provides a visual heartbeat
+  * Helps keep USB power banks awake
+  * Provides a simple powered-state indicator
   * Intended to be taped over
 
 Pixel count configured in the web interface refers only to **DMX-addressable pixels**.
+
+For example, if there are 24 physical LEDs and the first is reserved, configure 23 DMX-addressable pixels.
 
 ---
 
@@ -66,7 +67,7 @@ The ORB includes a built-in configuration UI.
 
 ### Access
 
-* `http://<unit-ip>`
+* `http://10.10.50.201`
 * or `http://orb.local` if mDNS is available
 
 ### Configurable parameters (live)
@@ -98,25 +99,128 @@ Changing the pixel count safely reinitializes the LED driver without rebooting.
 * Optional level shifter for long data runs
 * Power: 5 V USB-C supply or bank capable of 2–3 A
 
-**Mirror mode**: split the data line after the resistor to drive two identical strips. Each strip requires its own capacitor. Power is star-wired.
+**Mirror mode**: split the data line after the resistor to drive two identical strips. Each strip requires its own 1000 µF capacitor. Power is star-wired.
 
 ---
 
 ## Network
 
-### Router
+### Required network settings
 
-* Small travel router or access point
-* 2.4 GHz only
-* 20 MHz channel width
-* Fixed channel (1, 6, or 11)
-* WPA2-PSK AES
-* No internet required
+The ORB firmware expects the following network configuration:
 
-### Unit IP
+* Wi-Fi SSID: `ORB`
+* Wi-Fi password: configured in firmware and on the router
+* Router LAN IP: `10.10.50.1`
+* Subnet mask: `255.255.255.0`
+* ORB static IP: `10.10.50.201`
+* ORB gateway: `10.10.50.1`
+* ORB DNS: `10.10.50.1`
 
-* Static or DHCP, depending on configuration
-* IP address is shown in the web interface and on boot over Serial
+The router does not require an internet connection.
+
+---
+
+## Replacement router setup
+
+Almost any standard Wi-Fi router or travel router can be used as long as it supports a 2.4 GHz Wi-Fi network and allows its LAN address to be changed.
+
+### 1. Connect to the router
+
+* Power on the router
+* Connect a laptop using Ethernet or the router's default Wi-Fi network
+* Open the router's administration page
+
+The default address and login procedure vary by manufacturer. Check the router label or manual if necessary.
+
+### 2. Configure the LAN
+
+Set:
+
+* Router IP: `10.10.50.1`
+* Subnet mask: `255.255.255.0`
+
+Save the settings.
+
+The router may reboot. Afterward, reconnect using:
+
+`http://10.10.50.1`
+
+### 3. Configure DHCP
+
+Set the DHCP range to something similar to:
+
+* Start: `10.10.50.100`
+* End: `10.10.50.150`
+
+Do not include `10.10.50.201` in the DHCP pool because that address is reserved for the ORB.
+
+Also keep `10.10.50.2` outside the DHCP pool if it will be used as the lighting console address.
+
+### 4. Configure Wi-Fi
+
+Configure the **2.4 GHz** network with:
+
+* SSID: `ORB`
+* Password: must match `WIFI_PASSWORD` in the ORB firmware
+* Security: WPA2-Personal / WPA2-PSK AES
+* Channel width: 20 MHz
+* Channel: 1, 6 or 11
+* SSID broadcast: enabled
+
+The SSID is case-sensitive and must be exactly:
+
+`ORB`
+
+### 5. 5 GHz settings
+
+5 GHz can remain enabled for other devices, but the ORB requires a compatible 2.4 GHz network.
+
+If the router combines 2.4 GHz and 5 GHz under one SSID and the ORB has connection problems, separate the bands and use `ORB` for the 2.4 GHz network.
+
+### 6. Connect the ORB
+
+After configuring the router:
+
+1. Power-cycle the ORB
+2. Allow several seconds for Wi-Fi connection
+3. Connect a laptop to the `ORB` network
+4. Open:
+
+`http://10.10.50.201`
+
+If the web interface loads, the ORB is connected correctly.
+
+You can also test from a computer with:
+
+```text
+ping 10.10.50.201
+```
+
+### 7. Connect an Eos console
+
+Connect the console Ethernet port to a **LAN** port on the router.
+
+Suggested console network settings:
+
+* IP: `10.10.50.2`
+* Subnet mask: `255.255.255.0`
+* Gateway: `10.10.50.1`
+
+Do not connect the console to the router's WAN or Internet port.
+
+### 8. Configure the ORB
+
+Open the ORB web interface and configure:
+
+* sACN universe
+* DMX start address
+* pixel count
+* operating mode
+* brightness cap
+* unicast or multicast
+
+DMX addressing does not need to be configured in the router.
 
 ---
 
@@ -124,8 +228,8 @@ Changing the pixel count safely reinitializes the LED driver without rebooting.
 
 * DMX Out CHOP → Interface sACN
 * Match the universe and addressing shown in the web UI
-* Unicast to the unit IP or use multicast
-* Feed enough channels to cover intensity, pixels, and optional broadcast
+* Unicast to the ORB IP or use multicast
+* Feed enough channels to cover intensity, pixels and optional broadcast
 * Recommended rate ≤ 44 Hz
 
 ---
@@ -138,6 +242,7 @@ Changing the pixel count safely reinitializes the LED driver without rebooting.
   * Adafruit NeoPixel
   * ESPAsyncE131
   * ESPAsyncWebServer
+  * AsyncTCP
 * Upload firmware
 * Open Serial at 115200 to view boot status and IP
 
@@ -155,18 +260,25 @@ Changing the pixel count safely reinitializes the LED driver without rebooting.
 
 ## Troubleshooting
 
-* No output: confirm universe and addressing in the web interface
+* No web interface: confirm the device is connected to the `ORB` 2.4 GHz network
+* Cannot ping the ORB: confirm the router LAN is `10.10.50.1/24`
+* No DMX output: confirm universe and addressing in the web interface
 * Wrong colors: verify pixel color order in firmware
-* Flicker or brownout: shorten power leads, confirm voltage at strip, lower brightness cap
-* Power bank sleeping: reserved always-on pixel keeps most banks awake
-* RF instability: use unicast and a fixed Wi-Fi channel
+* Flicker or brownout: shorten power leads, confirm voltage at the strip and lower brightness cap
+* Power bank sleeping: confirm the reserved always-on pixel is illuminated
+* RF instability: use unicast, 20 MHz channel width and a fixed Wi-Fi channel
+* ORB will not join Wi-Fi: confirm the SSID is exactly `ORB`, verify the password matches the firmware and confirm WPA2 is enabled
 
 ---
 
 ## Quick reference
 
+* Wi-Fi SSID: `ORB`
+* Router IP: `10.10.50.1`
+* ORB IP: `10.10.50.201`
+* Console IP: `10.10.50.2`
 * Universe: configurable via web UI
 * Start address: configurable via web UI
 * Pixel count: configurable via web UI
 * First physical LED: reserved, always on
-* Configuration UI: `http://<unit-ip>` or `http://orb.local`
+* Configuration UI: `http://10.10.50.201` or `http://orb.local`
